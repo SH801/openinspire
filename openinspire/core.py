@@ -92,21 +92,29 @@ class openinspire:
 
     def _download_file(self, url, filename, index, total):
         target_path = os.path.join(self.cache_dir, filename)
-        
-        # Log that we started
-        self.log(f"[{index}/{total}] Starting: {filename}")
-        
+
+        # 1. Check if file exists locally
+        if os.path.exists(target_path):
+            file_size = os.path.getsize(target_path)
+            if file_size > 0:
+                # We log that we're skipping it
+                self.log(f"[{index}/{total}] Skipping (already exists): {filename}")
+                return # Exit the function early
+
+        # 2. If it doesn't exist, proceed with the download
         try:
             r = requests.get(url, stream=True, timeout=60)
             r.raise_for_status()
             with open(target_path, 'wb') as f:
                 for chunk in r.iter_content(chunk_size=8192):
                     f.write(chunk)
-                        
         except Exception as e:
-            self.log(f"[{index}/{total}] ERROR: {filename} ({e})")
-            raise
-
+            # Clean up partial file if download failed 
+            # so it doesn't trigger the 'exists' check next time
+            if os.path.exists(target_path):
+                os.remove(target_path)
+            raise e
+        
     def _unzip_all(self):
         zip_files = [os.path.join(self.cache_dir, f) for f in os.listdir(self.cache_dir) if f.endswith('.zip')]
         total_zips = len(zip_files)
