@@ -1,7 +1,7 @@
 # openinspire - library for downloading and amalgamating INSPIRE land parcels
 
 ## Overview
-The `openinspire` library provides a simple command line interface for automatically downloading and amalgamating INSPIRE land parcels. This data is provided as separate `GML` files for each UK local authority.
+The `openinspire` library provides a simple command line interface for automatically downloading and amalgamating INSPIRE land parcels. This data is typically provided as separate `GML` files for each UK local authority.
 
 A `yml` configuration file is used to provide key parameters to the library.
 
