@@ -14,8 +14,7 @@ source:
 
 # Directory where temporary data is stored
 cache_dir:
-  /Volumes/Ventoy/cache/openinspire
-#  ./tile_cache
+ ./tile_cache
 
 # The exact name and extension of the final file generated
 output:
