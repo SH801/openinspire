@@ -8,9 +8,13 @@ from urllib.parse import urljoin, urlparse
 import signal
 import shutil
 import sys
+import concurrent.futures
+import threading
 
 class openinspire:
     def __init__(self, config_path):
+        self.print_lock = threading.Lock()
+
         if not os.path.exists(config_path):
             raise FileNotFoundError(f"Config file not found: {config_path}")
             
@@ -32,7 +36,8 @@ class openinspire:
         os.makedirs(self.extract_dir, exist_ok=True)
 
     def log(self, message):
-        print(f"[openinspire] {message}", flush=True)
+        with self.print_lock:
+            print(f"[openinspire] {message}", flush=True)
 
     def _get_links(self):
         self.log(f"Scraping source: {self.base_url}")
@@ -53,21 +58,57 @@ class openinspire:
             self.log(f"Failed to scrape links: {e}")
             return []
 
-    def _download_file(self, url):
-        filename = os.path.basename(urlparse(url).path)
-        zip_path = os.path.join(self.cache_dir, filename)
+    def run_downloads(self, links):
+        self.log("--- Phase 1: Parallel Downloading ---")
+        total_links = len(links)
+        
+        # We recommend 4-8 workers. Too many might get your IP blocked by the server.
+        max_workers = 5 
 
-        if not os.path.exists(zip_path):
-            try:
-                r = requests.get(url, timeout=60, stream=True)
-                r.raise_for_status()
-                with open(zip_path, 'wb') as f:
-                    for chunk in r.iter_content(chunk_size=8192):
-                        f.write(chunk)
-            except Exception as e:
-                self.log(f"Download failed for {filename}: {e}")
-                return False
-        return True
+        with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+            # Create a list of tasks
+            # We map each URL to the download function with its index
+            future_to_url = {
+                executor.submit(
+                    self._download_file, 
+                    url, 
+                    os.path.basename(urlparse(url).path), 
+                    index, 
+                    total_links
+                ) : (index, url)
+                for index, url in enumerate(links, 1)
+            }
+
+            for future in concurrent.futures.as_completed(future_to_url):
+                index, url = future_to_url[future]
+                filename = os.path.basename(urlparse(url).path)
+                try:
+                    future.result()
+                    self.log(f"[{index}/{total_links}] Finished: {filename}")
+                except Exception as e:
+                    self.log(f"[{index}/{total_links}] FAILED: {filename} - {e}")
+
+        self.log("--- All Downloads Complete ---")
+
+    def _download_file(self, url, filename, index, total):
+        target_path = os.path.join(self.cache_dir, filename)
+        
+        # Log that we started
+        self.log(f"[{index}/{total}] Starting: {filename}")
+        
+        try:
+            r = requests.get(url, stream=True, timeout=60)
+            r.raise_for_status()
+            with open(target_path, 'wb') as f:
+                for chunk in r.iter_content(chunk_size=8192):
+                    f.write(chunk)
+            
+            # Log that we finished
+            self.log(f"[{index}/{total}] DONE: {filename}")
+            
+        except Exception as e:
+            self.log(f"[{index}/{total}] ERROR: {filename} ({e})")
+            raise
 
     def _unzip_all(self):
         zip_files = [os.path.join(self.cache_dir, f) for f in os.listdir(self.cache_dir) if f.endswith('.zip')]
@@ -123,11 +164,7 @@ class openinspire:
             return
 
         self.log("--- Phase 1: Downloading ---")
-        total_links = len(links)
-        for index, url in enumerate(links, 1):
-            filename = os.path.basename(urlparse(url).path)
-            self.log(f"[{index}/{total_links}] Downloading {filename}...")            
-            self._download_file(url)
+        self.run_downloads(links)
 
         self.log("--- Phase 2: Unzipping ---")
         self._unzip_all()
