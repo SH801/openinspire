@@ -8,7 +8,6 @@ from urllib.parse import urljoin, urlparse
 import signal
 import shutil
 import sys
-import importlib.resources as pkg_resources
 
 class openinspire:
     def __init__(self, config_path):
@@ -139,7 +138,8 @@ class openinspire:
 def main():
     import sys
     import os
-    
+    import importlib.resources as pkg_resources
+
     # Check if the user provided a path
     if len(sys.argv) >= 2:
         config_path = sys.argv[1]
