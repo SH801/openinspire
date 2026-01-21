@@ -23,7 +23,7 @@ dependencies = [
 ]
 
 [project.scripts]
-opendem = "openinspire.core:main"
+openinspire = "openinspire.core:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
