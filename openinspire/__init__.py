@@ -1,1 +1,1 @@
-from .core import openinspire
+__version__ = "0.1.0"
