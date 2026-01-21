@@ -123,7 +123,10 @@ class openinspire:
             return
 
         self.log("--- Phase 1: Downloading ---")
-        for url in links:
+        total_links = len(links)
+        for index, url in enumerate(links, 1):
+            filename = os.path.basename(urlparse(url).path)
+            self.log(f"[{index}/{total_links}] Downloading {filename}...")            
             self._download_file(url)
 
         self.log("--- Phase 2: Unzipping ---")
