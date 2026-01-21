@@ -1,0 +1,22 @@
+# ----------------------------------------------------
+# inspire.yml
+# yml configuration file for downloading INSPIRE land parcels
+# ----------------------------------------------------
+
+# Link to this GitHub code repository 
+# This can be used to host yml files on an open data server and automatically install required library just-in-time
+codebase:
+  https://github.com/SH801/openinspire.git
+
+# Link to Inspire webpage
+source:
+  https://use-land-property-data.service.gov.uk/datasets/inspire/download
+
+# Directory where temporary data is stored
+cache_dir:
+  /Volumes/Ventoy/cache/openinspire
+#  ./tile_cache
+
+# The exact name and extension of the final file generated
+output:
+  inspire.gpkg
