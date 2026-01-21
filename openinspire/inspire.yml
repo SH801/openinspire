@@ -14,7 +14,7 @@ source:
 
 # Directory where temporary data is stored
 cache_dir:
- ./tile_cache
+ ./cache
 
 # The exact name and extension of the final file generated
 output:
