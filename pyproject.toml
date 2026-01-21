@@ -27,3 +27,6 @@ openinspire = "openinspire.core:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
+
+[tool.setuptools.package-data]
+openinspire = ["*.yml", "*.yaml"]

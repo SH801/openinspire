@@ -8,6 +8,7 @@ from urllib.parse import urljoin, urlparse
 import signal
 import shutil
 import sys
+import importlib.resources as pkg_resources
 
 class openinspire:
     def __init__(self, config_path):
@@ -136,17 +137,28 @@ class openinspire:
         self.log("Success: Process complete.")
 
 def main():
-    if len(sys.argv) < 2:
-        print("Usage: openinspire inspire.yml")
-        sys.exit(1)
+    import sys
+    import os
     
-    config_path = sys.argv[1]
-    try:
-        app = openinspire(config_path)
-        app.run()
-    except Exception as e:
-        print(f"Critical Error: {e}")
+    # Check if the user provided a path
+    if len(sys.argv) >= 2:
+        config_path = sys.argv[1]
+    else:
+        # Fallback: Use the internal inspire.yml bundled with the package
+        print("[openinspire] No config provided. Using default internal inspire.yml...")
+        
+        # This finds the path to the yml file inside your installed package
+        try:
+            # For Python 3.9+
+            with pkg_resources.as_file(pkg_resources.files('openinspire').joinpath('inspire.yml')) as p:
+                config_path = str(p)
+        except Exception:
+            import openinspire
+            config_path = os.path.join(os.path.dirname(openinspire.__file__), 'inspire.yml')
+
+    if not os.path.exists(config_path):
+        print(f"Error: Could not find config at {config_path}")
         sys.exit(1)
 
-if __name__ == "__main__":
-    main()
+    app = openinspire(config_path)
+    app.run()
