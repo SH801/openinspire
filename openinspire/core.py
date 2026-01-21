@@ -139,26 +139,28 @@ def main():
     import sys
     import os
     import importlib.resources as pkg_resources
+    
+    # Use a different name for the module import to avoid clashing with the class name
+    import openinspire as openinspire_module
 
-    # Check if the user provided a path
     if len(sys.argv) >= 2:
         config_path = sys.argv[1]
     else:
-        # Fallback: Use the internal inspire.yml bundled with the package
         print("[openinspire] No config provided. Using default internal inspire.yml...")
-        
-        # This finds the path to the yml file inside your installed package
         try:
-            # For Python 3.9+
-            with pkg_resources.as_file(pkg_resources.files('openinspire').joinpath('inspire.yml')) as p:
+            # Modern way (Python 3.9+)
+            ref = pkg_resources.files('openinspire').joinpath('inspire.yml')
+            with pkg_resources.as_file(ref) as p:
                 config_path = str(p)
         except Exception:
-            import openinspire
-            config_path = os.path.join(os.path.dirname(openinspire.__file__), 'inspire.yml')
+            # Fallback using the renamed module import
+            package_dir = os.path.dirname(openinspire_module.__file__)
+            config_path = os.path.join(package_dir, 'inspire.yml')
 
     if not os.path.exists(config_path):
         print(f"Error: Could not find config at {config_path}")
         sys.exit(1)
 
+    # Now 'openinspire' safely refers to your Class
     app = openinspire(config_path)
     app.run()
