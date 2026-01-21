@@ -102,10 +102,7 @@ class openinspire:
             with open(target_path, 'wb') as f:
                 for chunk in r.iter_content(chunk_size=8192):
                     f.write(chunk)
-            
-            # Log that we finished
-            self.log(f"[{index}/{total}] DONE: {filename}")
-            
+                        
         except Exception as e:
             self.log(f"[{index}/{total}] ERROR: {filename} ({e})")
             raise
